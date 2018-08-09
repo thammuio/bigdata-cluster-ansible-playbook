@@ -1,0 +1,16 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug:
+    msg: " {{ ansible_os_family|lower }}       ----   {{ ansible_distribution_major_version }}"
+
+#All the Adhoc
+- name: Disable transparent huge pages - until reboot
+  shell: echo never > /sys/kernel/mm/transparent_hugepage/enabled && echo never > /sys/kernel/mm/transparent_hugepage/defrag
+  ignore_errors: true
+
+
+# - name: Set Proper entry in /etc/hosts file for a server
+#   shell: sed -i 's/.hadoop.company.com//;s/{{inventory_hostname_short}}/{{inventory_hostname}}/' /etc/hosts
+

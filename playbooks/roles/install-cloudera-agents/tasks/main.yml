@@ -1,0 +1,44 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+
+- name: Install Cloudera Agent
+  yum:
+    name: cloudera-manager-agent
+    state: present
+    disable_gpg_check: true
+  notify: Reload systemd
+
+- name: Enable SSL on Agent
+  lineinfile: 
+    dest: /etc/cloudera-scm-agent/config.ini
+    regexp: '^use_tls'
+    line: 'use_tls=1'
+
+- name: Set the CM host in agent configuration
+  lineinfile: 
+    dest: /etc/cloudera-scm-agent/config.ini
+    regexp: '^server_host='
+    line: 'server_host={{ cloudera_server }}'
+
+- name: Set the CM host port in agent configuration
+  lineinfile:
+    dest: /etc/cloudera-scm-agent/config.ini
+    regexp: '^server_port='
+    line: 'server_port=7182'
+
+- meta: flush_handlers
+
+- name: Make sure the cloudera-agent service is started
+  service:
+    name: cloudera-scm-agent
+    state: started
+
+- name: Make sure the cloudera-scm-agent service is enabled
+  service:
+    name: cloudera-scm-agent
+    enabled: yes
+  ignore_errors: true

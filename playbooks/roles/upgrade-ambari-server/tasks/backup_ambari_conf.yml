@@ -1,0 +1,21 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+- name: Create Upgrade Backup Directory
+  file:
+    path: '{{ backup_dir }}'
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Make a safe copy of the Ambari Server configuration file found at /etc/ambari-server/conf/ambari.properties
+  copy:
+    src: '/etc/ambari-server/conf/ambari.properties'
+    dest: '{{ backup_dir }}/ambari.properties'
+    owner: root
+    group: root
+    mode: 0644

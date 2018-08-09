@@ -1,0 +1,95 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+  
+- block:
+    - name: Create the {{ oraclejdk_options.base_folder }} directory
+      file:
+        path: "{{ oraclejdk_options.base_folder }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Extract the Oracle JDK tarball
+      unarchive:
+        src: "{{ oraclejdk_options.tarball_location }}"
+        dest: "{{ oraclejdk_options.base_folder }}"
+        owner: root
+        group: root
+        mode: 0755
+        remote_src: "{{ oraclejdk_options.remote_files }}"
+        list_files: yes
+        keep_newer: yes
+      register: "tarball_content"
+
+    - name: Set the new JDK folder name
+      set_fact:
+        jdk_folder: "{{ tarball_content.files[0] | regex_replace('/(.*)$','') }}"
+
+    - name: Create the {{ oraclejdk_options.base_folder }}/latest symlink
+      file:
+        src: "{{ oraclejdk_options.base_folder }}/{{ jdk_folder }}"
+        path: "{{ oraclejdk_options.base_folder }}/latest"
+        state: link
+        force: yes
+
+    - name: Extract the JCE archive
+      unarchive:
+        src: "{{ oraclejdk_options.jce_location }}"
+        dest: "{{ oraclejdk_options.base_folder }}/latest/jre/lib/security"
+        owner: root
+        group: root
+        mode: 0755
+        remote_src: "{{ oraclejdk_options.remote_files }}"
+
+    - name: Copy the JCE jar files to {{ oraclejdk_options.base_folder }}/latest/jre/lib/security
+      copy:
+        src: "{{ oraclejdk_options.base_folder }}/latest/jre/lib/security/UnlimitedJCEPolicyJDK8/{{ item }}"
+        dest: "{{ oraclejdk_options.base_folder }}/latest/jre/lib/security"
+        force: yes
+        remote_src: yes
+      with_items:
+        - local_policy.jar
+        - US_export_policy.jar
+
+    - name: Change Permissions on Copied the JCE jar files to {{ oraclejdk_options.base_folder }}/latest/jre/lib/security
+      file:
+        path: "{{ oraclejdk_options.base_folder }}/latest/jre/lib/security/{{ item }}"
+        mode: 0755
+      with_items:
+        - local_policy.jar
+        - US_export_policy.jar
+
+    - name: Create the /usr/share/java directory
+      file:
+        path: /usr/share/java
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy Connector - ojdbc
+      copy:
+      src: "{{ jdbc_driver_path }}/{{ ojdbc_driver_name }}"
+      dest: /usr/share/java
+      owner: root
+      group: root
+      mode: 0755
+
+    - name: Copy Connector - mysql
+      copy:
+      src: "{{ jdbc_driver_path }}/{{ mysql_driver_name }}"
+      dest: /usr/share/java
+      owner: root
+      group: root
+      mode: 0755
+
+    - name: Create the mysql symlink
+      file:
+        src: "/usr/share/java/{{ mysql_driver_name }}"
+        path: "/usr/share/java/mysql-connector-java.jar"
+        state: link
+        force: yes
+
+  when: java == "oraclejdk"

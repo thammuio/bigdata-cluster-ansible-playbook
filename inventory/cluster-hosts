@@ -1,0 +1,24 @@
+[ambari-server]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[clouderamanager-server]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[master-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+
+[name-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[worker-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[hbase-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[kafka-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn
+
+[cassandra-nodes]
+host-fqdn ansible_host=host-ip node_fqdn=host-fqdn

@@ -1,0 +1,16 @@
+---
+####################################################
+#### Setup Password less SSH for the nodes ##########
+####################################################
+
+- name: Setup Password less SSH for the nodes
+  hosts: all
+  user: '{{ user }}'
+  # become: yes
+  # become_method: sudo
+  # become_user: root
+  # become_flags: '-s /bin/sh'
+  # gather_facts: no
+  roles:
+    - setup-passwordless-ssh
+  tags: setup-passwordless-ssh

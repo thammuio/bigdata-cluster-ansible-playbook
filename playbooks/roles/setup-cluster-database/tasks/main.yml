@@ -1,0 +1,88 @@
+---
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+# - block:
+#     - name: Upload mysql repository file (yum)
+#       template:
+#         src: mysql-community.repo.j2
+#         dest: /etc/yum.repos.d/mysql-community.repo
+#         mode: 0644
+#       when: ansible_os_family|lower == "redhat"
+#   when: database == "mysql"
+
+# - block:
+#     - name: Upload mariadb repository file (yum)
+#       template:
+#         src: mariadb.repo.j2
+#         dest: /etc/yum.repos.d/mariadb.repo
+#         mode: 0644
+#       when: ansible_os_family|lower == "redhat"
+#   when: database == "mariadb"
+
+- block:
+  - name: Install {{ database }} database packages
+    package:
+      name: "{{ item }}"
+      update_cache: yes
+      state: present
+    with_items: "{{ hostvars[inventory_hostname][database + '_packages'] }}"
+
+  - name: Make sure the {{ database }} service is started
+    service:
+      name: "{{ hostvars[inventory_hostname][database + '_service_name'] }}"
+      state: started
+
+  - name: Make sure the {{ database }} service is enabled
+    service:
+      name: "{{ hostvars[inventory_hostname][database + '_service_name'] }}"
+      enabled: yes
+    ignore_errors: true
+  when: database == "mysql" or database == "mariadb"
+
+- block:
+    - name: Create the ambari database (mysql)
+      mysql_db:
+        name: "{{ database_options.ambari_db_name }}"
+        state: present
+
+    - name: Create the hive database (mysql)
+      mysql_db:
+        name: "{{ database_options.hive_db_name }}"
+        state: present
+      when: hiveserver_hosts is defined and hiveserver_hosts|length > 0
+
+    - name: Create the oozie database (mysql)
+      mysql_db:
+        name: "{{ database_options.oozie_db_name }}"
+        state: present
+
+    - name: Create the ranger admin database (mysql)
+      mysql_db:
+        name: "{{ database_options.rangeradmin_db_name }}"
+        state: present
+      when: rangeradmin_hosts is defined and rangeradmin_hosts|length > 0
+  when: (database == "mysql" or database == "mariadb") and stack == "hdp"
+
+
+
+- block:
+    - name: Create the ambari database (mysql)
+      mysql_db:
+        name: "{{ database_options.ambari_db_name }}"
+        state: present
+
+    - name: Create the ranger admin database (mysql)
+      mysql_db:
+        name: "{{ database_options.rangeradmin_db_name }}"
+        state: present
+  when: (database == "mysql" or database == "mariadb") and stack == "hdf"
+
+

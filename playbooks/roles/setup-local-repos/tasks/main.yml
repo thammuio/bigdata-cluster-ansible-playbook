@@ -1,0 +1,108 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug:
+    msg: " {{ ansible_os_family|lower }}       ----   {{ ansible_distribution_major_version }}"
+
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+- name: Install required packages
+  package:
+    name: "{{ item }}"
+    update_cache: yes
+    state: present
+  with_items: "{{ packages|default([]) }}"
+
+- name: Create Local repo Directory
+  file:
+    path: '{{ localrepopath }}'
+    state: directory
+    mode: 0755
+    owner: '{{localrepoowner }}'
+    group: '{{ localrepogroup }}'
+
+- name: Create tar files Directory
+  file:
+    path: '{{ localrepotar }}'
+    state: directory
+    mode: 0755
+    owner: '{{localrepoowner }}'
+    group: '{{ localrepogroup }}'
+
+- name: Set the DocumentRoot of httpd to Repo Direcotry
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "^DocumentRoot"
+    line: 'DocumentRoot "{{ localrepopath }}"'
+    state: present
+  notify: Restart httpd
+
+- name: Download Ambari tar
+  get_url:
+    url: '{{ hortonworks.ambari_repo }}'
+    dest: '{{ localrepotar }}'
+    owner: '{{ localrepoowner }}'
+    group: '{{ localrepogroup }}'
+    mode: 0440
+
+- block:
+  - name: Download HDP tar
+    get_url:
+      url: '{{ hortonworks.hdp_repo }}'
+      dest: '{{ localrepotar }}'
+      owner: '{{ localrepoowner }}'
+      group: '{{ localrepogroup }}'
+      mode: 0440
+  when: stack == "hdp"
+
+- block:
+  - name: Download HDP UTILS tar
+    get_url:
+      url: '{{ hortonworks.hdp_utils_repo }}'
+      dest: '{{ localrepotar }}'
+      owner: '{{ localrepoowner }}'
+      group: '{{ localrepogroup }}'
+      mode: 0440
+  when: stack == "hdp" or stack == "hdf"
+
+- block:
+  - name: Download HDF tar
+    get_url:
+      url: '{{ hortonworks.hdf_repo }}'
+      dest: '{{ localrepotar }}'
+      owner: '{{ localrepoowner }}'
+      group: '{{ localrepogroup }}'
+      mode: 0440
+
+  - name: Download HDF MPACK tar
+    get_url:
+      url: '{{ hortonworks.hdf_mpack_repo }}'
+      dest: '{{ localrepotar }}'
+      owner: '{{ localrepoowner }}'
+      group: '{{ localrepogroup }}'
+      mode: 0440
+  when: stack == "hdp"
+
+
+- name: Unarchive a file that needs to be downloaded (added in 2.0)
+  unarchive:
+    src: https://example.com/example.zip
+    dest: /usr/local/bin
+    remote_src: yes
+
+- name: Create Repo for Previosuly Downlaoded RPMs
+  command: createrepo '{{ localrepopath }}'
+
+- name: Start HTTP service foo Local Repo
+  service:
+    name: httpd
+    state: started

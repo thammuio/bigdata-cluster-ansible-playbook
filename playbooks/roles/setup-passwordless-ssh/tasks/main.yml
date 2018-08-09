@@ -1,0 +1,31 @@
+---
+
+#id no path for id_rsa.pub is specified; it will be picked up from the files folder in role
+#This will only work when the actual user has full privilages on the machine
+#alternative is to have the password for the sudo user to setup the keys
+
+#sudo
+- name: Set authorized key from a file
+  # become: yes
+  # become_method: sudo
+  # become_user: '{{ ssh_user }}'
+  authorized_key:
+    user: '{{ ssh_user }}'
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+#pbrun
+# - name: Set authorized key from a file
+#   become: yes
+#   become_method: pbrun
+#   become_user: '{{ ssh_user }}'
+#   authorized_key:
+#     user: '{{ ssh_user }}'
+#     state: present
+#     key: "{{ lookup('file', 'id_rsa.pub') }}"
+
+# - name: Set authorized key for user ubuntu copying it from current user
+#   authorized_key:
+#     user: user
+#     state: present
+#     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"

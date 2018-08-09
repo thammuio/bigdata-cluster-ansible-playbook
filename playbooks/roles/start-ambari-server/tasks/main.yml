@@ -1,0 +1,14 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+#- name: start ambari Server
+#  service:
+#    name: ambari-server
+#    state: started
+
+
+- name: Start Ambari Server
+  shell: service ambari-server start

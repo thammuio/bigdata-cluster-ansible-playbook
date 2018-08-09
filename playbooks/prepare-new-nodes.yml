@@ -1,0 +1,16 @@
+---
+###############################################################
+#############     Prepare the Nodes        ####################
+###############################################################
+
+- name: Prepare New Nodes
+  hosts: new-nodes
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - prepare-cluster-nodes
+    - install-ambari-agents
+  tags: prepareclusternodes
+

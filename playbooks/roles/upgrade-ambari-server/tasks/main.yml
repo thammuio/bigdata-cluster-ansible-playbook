@@ -1,0 +1,49 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+# - name: Stop Ambari Server
+#   service:
+#     name: ambari-server
+#     state: stopped
+
+- name: Start Ambari Server
+  shell: service ambari-server start
+
+#Backup ambari server properties file
+- import_tasks: backup_ambari_conf.yml
+
+# - name: Yum Clean up and Check for version of Ambari Server/Agent currently Running pre upgrade
+#   shell: |
+#     yum clean all
+#     yum info ambari-server
+
+- name: Upgrading Ambari-Server
+  yum:
+    name: ambari-server
+    state: latest
+    # notify:
+    #   - start ambari-server
+      # - copyback ambariconf
+
+# - name: Confirm Ambari Server is up
+#   wait_for: 
+#     port: 8080
+#     delay: 10
+#     state: started
+
+# - name: Upgrade Ambari Server database schema
+#     shell: ambari-server upgrade
+
+- name: Getting Installed/Upgraded Ambari-Agent version
+  shell: yum info ambari-agent | grep Version
+  register: yuminforesult
+
+- name: Installed/Upgraded Ambari-Agent version is
+  debug:
+    var: yuminforesult.stdout_lines
+
+#Copy back the ambari server properties file after upgrade
+- import_tasks: copyback_ambari_conf.yml

@@ -1,0 +1,49 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+- name: Install Cloudera Manager Server
+  yum:
+    name: cloudera-manager-server
+    state: present
+  notify: Reload systemd
+
+- meta: flush_handlers
+
+- block:
+    - name: Install {{ database }} required packages
+      package:
+        name: "{{ item }}"
+        update_cache: yes
+        state: present
+      with_items: "{{ hostvars[inventory_hostname][database + '_packages'] }}"
+
+    
+  when: database != "embedded" or database != "oracle"
+
+- block:
+    
+  when: database == "oracle"
+
+- meta: flush_handlers
+
+- name: Make sure the cloudera-scm-server service is started
+  service:
+    name: cloudera-scm-server
+    state: started
+
+- name: Make sure the cloudera-scm-server service is enabled
+  service:
+    name: cloudera-scm-server
+    enabled: yes
+  ignore_errors: true

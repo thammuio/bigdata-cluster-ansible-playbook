@@ -1,0 +1,162 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug:
+    msg: " {{ ansible_os_family|lower }}       ----   {{ ansible_distribution_major_version }}"
+
+
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+- name: Set FQDN
+  hostname:
+    name: '{{ node_fqdn }}'
+
+- name: Comment ipv6(::1) in /etc/hosts file
+  shell: sed -i '/::1/ s/^/#/' /etc/hosts
+
+- name: Set Proper entry in /etc/hosts file for a server
+  shell: sed -i 's/{{ domain_name }}//;0,/{{ inventory_hostname_short }}/s//{{ inventory_hostname }}/' /etc/hosts
+
+- name: Disable Python Cert Verify1
+  shell: sed -i '/verify=platform_default/ s/^/#/' /etc/python/cert-verification.cfg
+
+- name: Disable Python Cert Verify2
+  shell: sed -i '/verify=platform_default/a verify=disable' /etc/python/cert-verification.cfg
+
+  
+- name: Set ansible managed block in /etc/sysctl.conf
+  blockinfile:
+    dest: /etc/sysctl.conf
+    block: |
+      #Disable IPv6
+      net.ipv6.conf.all.disable_ipv6 = 1
+      net.ipv6.conf.default.disable_ipv6 = 1
+      # Write out of dirty data begins in the background when dirty pages this %
+      vm.dirty_ratio = 80
+      vm.dirty_background_ratio = 5
+      # default size of write buffers used by sockets in bytes
+      net.core.wmem_default = 212992
+      # default size of receive buffers used by sockets in bytes
+      net.core.rmem_default = 212992
+      # Max write buffer size for all connections
+      net.core.wmem_max = 5242880
+      # Max read buffer size for all connections
+      net.core.rmem_max = 5242880
+      # TCP Autotuning setting - receive/write
+      # The first value = min receive buffer for each TCP connection
+      # The second value = default receive buffer allocated for each TCP socket.
+      # The third and last value = maximum receive buffer that can be allocated for a TCP socket.
+      net.ipv4.tcp_wmem = 4096        65536     4194304
+      net.ipv4.tcp_rmem = 4096        87380     6291456
+      # option to enlarge the transfer window
+      net.ipv4.tcp_window_scaling = 1
+      # max no of remembered connection requests, which still have not received an acknowledgment from connecting clients
+      net.ipv4.tcp_max_syn_backlog = 2048
+      # Handle SYN floods and large numbers
+      net.core.netdev_max_backlog = 2000
+      # Increase number of incoming connections that can queue up before droppin
+      net.core.somaxconn = 4096
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR BIG DATA CLUSTER"
+  notify:
+    - reload sysctl.conf
+
+# - name: Update /etc/hosts file - Add all hosts to /etc/hosts
+#   blockinfile:
+#     dest: /etc/hosts
+#     content: "{{ lookup('template', 'templates/etc/hosts.j2') }}"
+#     state: present
+
+- name: Install required packages
+  package:
+    name: "{{ item }}"
+    update_cache: yes
+    state: present
+  with_items: "{{ packages|default([]) }}"
+
+- name: Make sure the NTP service is started - systemctl start ntpd.service
+  service:
+    name: "{{ ntp_service_name }}"
+    state: started
+
+
+- name: Make sure the NTP service is enabled - systemctl enable ntpd.service
+  service:
+    name: "{{ ntp_service_name }}"
+    enabled: yes
+  ignore_errors: true
+
+#Ambari is doing these already
+# - name: Make sure /etc/security/limits.d exists
+#   file:
+#     path: /etc/security/limits.d
+#     mode: 0755
+#     state: directory
+
+# - name: Set nofile and nproc limits
+#   blockinfile:
+#     dest: /etc/security/limits.d/99-bigdata.conf
+#     create: yes
+#     mode: 0644
+#     block: |
+#       * soft nofile 65536
+#       * hard nofile 65536
+#       * soft nproc 65536
+#       * hard nproc 65536
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+
+- name: Set swappiness to {{ swappiness }}
+  sysctl:
+    name: vm.swappiness
+    value: "{{ swappiness }}"
+    state: present
+    reload: yes
+    ignoreerrors: yes
+
+
+- name: Stop the {{ firewall_service_name }} firewall service - systemctl stop firewalld.service
+  service:
+    name: "{{ firewall_service_name }}"
+    state: stopped
+  when: disable_firewall
+
+
+- name: Disable the {{ firewall_service_name }} firewall service - systemctl disable firewalld.service
+  service:
+    name: "{{ firewall_service_name }}"
+    enabled: no
+  ignore_errors: true
+  when: disable_firewall
+
+
+- name: Disable selinux
+  selinux:
+    state: disabled
+  when: ansible_os_family|lower == "redhat"
+
+
+- name: Disable transparent huge pages
+  blockinfile:
+    dest: /etc/rc.d/rc.local
+    block: |
+              echo never > /sys/kernel/mm/transparent_hugepage/defrag
+              echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+
+- name: Disable transparent huge pages - until reboot
+  shell: echo never > /sys/kernel/mm/transparent_hugepage/enabled && echo never > /sys/kernel/mm/transparent_hugepage/defrag
+  ignore_errors: true
+
+#Setup Java
+- name: Install/Setup Java
+  import_tasks: java.yml
+#   when: (java != "embedded") and ( stack == "hdp" or stack == "hdf" or stack == "cdh")

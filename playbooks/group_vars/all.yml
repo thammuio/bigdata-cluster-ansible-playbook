@@ -1,0 +1,147 @@
+---
+#General
+varcheck: Your Variables are Working!!
+
+###############################################################
+###################        Control Flag    ####################
+###############################################################
+stack: 'hdp'                # set to 'hdp' or 'hdf' or 'cdh'
+
+###############################################################
+###################          SSH           ####################
+###############################################################
+ssh_user: sudouser
+domain_name: .hadoop.company.com
+
+###############################################################
+###########   Hortonworks - Ambari/HDP/HDF       ##############
+###############################################################
+#Ambari
+ambari_server: host.hadoop.company.com
+
+#Ambari Versions
+ambari_version: '2.6.1.5'                                # must be the 4-part full version number
+hdp_version: '2.6.4.0'                                 # must be the 4-part full version number
+hdf_version: '3.0.3.0'                                    # must be the 4-part full version number
+hdputils_version: '1.1.0.22'                                 # set this to 1.1.0.21 for HDP >= 2.5 or HDF, and to 1.1.0.20 for any HDP less than 2.5
+
+#Repositoreis local and Remote - its not needed if you are doing the local repo by yourself
+# hortonworks:
+#   ambari_repo: http://public-repo-1.hortonworks.com/ambari/centos7/2.x/updates/2.6.0.0/ambari-2.6.0.0-centos7.tar.gz
+#   hdp_repo: http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0/HDP-2.6.3.0-centos6-rpm.tar.gz
+#   hdp_utils_repo : http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos7/HDP-UTILS-1.1.0.21-centos7.tar.gz
+#   hdf_repo: https://s3.amazonaws.com/public-repo-1.hortonworks.com/HDF/centos7/3.x/updates/3.0.2.0/HDF-3.0.2.0-centos7-rpm.tar.gz
+#   hdf_mpack_repo: https://s3.amazonaws.com/public-repo-1.hortonworks.com/HDF/centos7/3.x/updates/3.0.2.0/tars/hdf_ambari_mp/hdf-ambari-mpack-3.0.2.0-76.tar.gz
+
+#Local Repos for intital installation or for Upgrade
+local:
+  base_url: 'http://ip:9000'          # change this if using a Local Repository
+  ambari_repo_url: http://ip:9000/ambari/centos7/2.6.1.5-3
+  ambari_repo_desc: Ambari Repo 2.6.1.5
+  ambari_repo_name: ambari-2.6.1.5
+  # hdp_repo_url: http://public-repo-1.hortonworks.com
+  # hdp_repo_desc: Ambari Repo 2.5.2.0
+  # hdp_repo_name: hdp.repo
+  # hdp_utils_repo_url: http://public-repo-1.hortonworks.com
+  # hdp_utils_repo_desc: Ambari Repo 2.5.2.0
+  # hdp_utils_repo_name: hdp_utils.repo
+  # hdf_repo_url: http://public-repo-1.hortonworks.com
+  # hdf_repo_desc: HDF Repo 2.5.2.0
+  # hdf_repo_name: hdf.repo
+
+mpack_path: /bigdata/installers                               # Must be a path on Ambari Server
+mpack_filename: 'hdf-ambari-mpack-3.0.3.0-76.tar.gz'        # must be set if HDF will be installed and it should be exist on Ambari server
+
+#Ambari Credentials
+ambari_admin_user: 'admin'
+ambari_admin_password: 'admin'                                  # the password for the above admin user
+ambari_admin_default_password: 'admin'                          # no need to change this (unless the Ambari default changes)
+wait: true                                                      # wait for the cluster to finish installing
+wait_timeout: 3600                                              # 60 minutes
+
+default_password: 'ChangeMe'                                # a default password for all required passwords which are not specified in the blueprint
+config_recommendation_strategy: 'NEVER_APPLY'
+
+###############################################################
+###########  Cloudera - ClouderaManager/CDH/Kafka #############
+###############################################################
+cloudera_server: fqdn
+
+cdh_version: 5.12.0
+cdh_parcel_dir: /opt/cloudera/parcels/CDH
+localrepo_path: /bigdata/cm5.12.0/
+localrepo_path2: /bigdata/cm5.12.0/repodata/
+localrepodesc: Cloudera Manager 5.12.0 Local Repo
+localrepo_owner: sudouser
+localrepo_group: apache
+cmserver_rpmurl: https://archive.cloudera.com/cm5/redhat/6/x86_64/cm/5.7.2/RPMS/x86_64/cloudera-manager-server-5.7.2-1.cm572.p0.17.el6.x86_64.rpm
+cmagent_rpmurl: https://archive.cloudera.com/cm5/redhat/6/x86_64/cm/5.7.2/RPMS/x86_64/cloudera-manager-agent-5.7.2-1.cm572.p0.17.el6.x86_64.rpm
+cmdaemon_rpmurl: https://archive.cloudera.com/cm5/redhat/6/x86_64/cm/5.7.2/RPMS/x86_64/cloudera-manager-daemons-5.7.2-1.cm572.p0.17.el6.x86_64.rpm
+localrepo_url: http://fqdn/cm5.12.0
+localrepodest: /var/www/html/cm5.12.0
+httprepo_user: root
+httprepo_group: root
+
+###############################################################
+###################  Local Repo Paths      ####################
+###############################################################
+
+
+
+###############################################################
+###################          Java          ####################
+###############################################################
+
+#Java - Make sure you have downlaoded the java before hand to the specified location
+java: 'oraclejdk'                                             # can be set to 'embedded', 'openjdk' or 'oraclejdk'
+oraclejdk_options:                                            # only used when java is set to 'oraclejdk'
+  # base_folder: '/usr/java'
+  base_folder: '/usr/jdk64'                                   # the folder where the Java package should be unpacked to
+  tarball_location: '/bigdata/installers/jdk-8u162-linux-x64.tar.gz'    # the location of the tarball on the remote system or on the Ansible controller
+  jce_location: '/bigdata/installers/jce_policy-8.zip'                 # the location of the JCE package on the remote system or on the Ansible controller
+  remote_files: no                                            # set to yes to indicate the files are already on the remote systems, otherwise they will be copied by Ansible from the Ansible controller
+jdbc_driver_path: /bigdata/installers/
+ojdbc_driver_name: ojdbc7.jar
+mysql_driver_name: mysql-connector-java-5.1.45-bin.jar
+
+###############################################################
+###################          Database      ####################
+###############################################################
+#Database
+
+database: 'oracle'                     # can be set to 'embedded', 'postgres', 'oracle', 'mysql' or 'mariadb'
+database_options:
+  external_hostname: 'host-scan-name'                 # if this is empty, Ansible will install and prepare the databases on the ambari-node
+  ambari_db_name: 'schema'              # Service name or ServiceID for oracle - HADOOPQ_APPS
+  ambari_db_username: 'AMBARI'          # user/schema name for oracle
+  ambari_db_password: 'pass'        # user/schema password for oracle
+  hive_db_name: 'hive'
+  hive_db_username: 'hive'
+  hive_db_password: 'hive'
+  oozie_db_name: 'oozie'
+  oozie_db_username: 'oozie'
+  oozie_db_password: 'oozie'
+  rangeradmin_db_name: 'ranger'
+  rangeradmin_db_username: 'ranger'
+  rangeradmin_db_password: 'ranger'
+  registry_db_name: 'registry'
+  registry_db_username: 'registry'
+  registry_db_password: 'registry'
+  streamline_db_name: 'streamline'
+  streamline_db_username: 'streamline'
+  streamline_db_password: 'streamline'
+
+ambari_ddl: /var/lib/ambari-server/resources/Ambari-DDL-Oracle-CREATE.sql   #Oracle Ambari-DDL-Oracle-CREATE.sql or MySQL Ambari-DDL-MySQL-CREATE.sql
+oracle_sqlplus:
+
+###############################################################
+###################          SSL      ####################
+###############################################################
+certs_tar: /certs/allcerts.tar
+certs_temp_dest: /certs
+
+###############################################################
+###################   System Related/Other ####################
+###############################################################
+external_dns: yes          # set to yes to use the existing DNS (when no, it will update the /etc/hosts file - must be set to 'no' when using Azure)
+disable_firewall: yes      # set to yes to disable the existing local firewall service (iptables, firewalld, ufw)

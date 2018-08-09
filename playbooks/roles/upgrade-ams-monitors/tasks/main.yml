@@ -1,0 +1,35 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+# - name: Yum Clean up and Check for version of Ambari Server/Agent currently Running pre upgrade
+#   shell: yum clean all
+
+- name: Upgrading Ambari Metrics Monitor
+  yum:
+    name: ambari-metrics-monitor
+    state: latest
+
+- name: Getting Installed/Upgraded Ambari Metrics Monitor version
+  shell: yum info ambari-metrics-monitor | grep Version
+  register: yuminforesult1
+
+- name: Installed/Upgraded Ambari Metrics Monitor version is
+  debug:
+    var: yuminforesult1.stdout_lines
+
+- name: Upgrading Ambari Metrics Hadoop Sink
+  yum:
+    name: ambari-metrics-hadoop-sink
+    state: latest
+
+
+- name: Getting Installed/Upgraded Ambari Metrics Hadoop Sink version
+  shell: yum info ambari-metrics-hadoop-sink | grep Version
+  register: yuminforesult2
+
+- name: Installed/Upgraded Ambari Metrics Hadoop Sink is
+  debug:
+    var: yuminforesult2.stdout_lines

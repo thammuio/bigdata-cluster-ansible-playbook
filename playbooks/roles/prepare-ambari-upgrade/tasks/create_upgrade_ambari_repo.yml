@@ -1,0 +1,16 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+- name: Add Ambari Patch/Upgrade repository
+  yum_repository:
+    name: '{{ repofilename }}'
+    description: '{{ newrepodesc }}'
+    baseurl: '{{ newrepourl }}'
+    gpgcheck: no
+
+- name: Yum Clean up after adding the new repo file
+  shell: |
+    yum clean all

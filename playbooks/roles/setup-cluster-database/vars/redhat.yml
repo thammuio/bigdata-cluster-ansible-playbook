@@ -1,0 +1,15 @@
+---
+mysql_repo_url: 'http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch/'
+mysql_repo_key: 'http://repo.mysql.com/RPM-GPG-KEY-mysql'
+mysql_packages:
+  - mysql-community-server
+  - MySQL-python
+mysql_service_name: mysqld
+
+mariadb_repo_url: 'http://yum.mariadb.org/10.2/rhel6-amd64'
+mariadb_repo_key: 'http://yum.mariadb.org/RPM-GPG-KEY-MariaDB'
+mariadb_packages:
+  - MariaDB-server
+  - MySQL-python
+  - MariaDB-client
+mariadb_service_name: mariadb

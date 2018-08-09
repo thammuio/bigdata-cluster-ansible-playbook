@@ -1,0 +1,17 @@
+---
+- name: Reload systemd
+  command: systemctl daemon-reload
+  when: (ansible_os_family|lower == "redhat" and ansible_distribution_major_version|int == 7)
+
+- name: Restart cloudera-scm-agent
+  service: name=cloudera-scm-agent state=restarted
+
+- name: Restart cloudera-scm-server
+  service: name=cloudera-scm-server state=restarted
+  notify: "Wait for Cloudera Server to start listening on port 7180"
+
+- name: Wait for Cloudera Server to start listening on port 7180
+  wait_for:
+    port: 7180
+    host: 0.0.0.0
+    delay: 1

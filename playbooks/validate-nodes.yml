@@ -1,0 +1,17 @@
+---
+# - include: "set_variables.yml"
+
+###############################################################
+#############     Prepare the Nodes        ####################
+###############################################################
+
+- name: Validate the Builds and other required things on new builds
+  hosts: all
+  user: '{{ user }}'
+  become: yes
+  become_method: sudo
+  roles:
+    - validate-cluster-nodes
+  ignore_errors: yes
+  tags: validateclusternodes
+

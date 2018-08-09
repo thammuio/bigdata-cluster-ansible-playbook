@@ -1,0 +1,166 @@
+---
+- include: "set_variables.yml"
+
+####################################################
+#### Start or Stop Ambari server or agents##########
+####################################################
+
+- name: Stop Ambari Server
+  hosts: ambari-node
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - stopambariserver
+  tags: stopambariserver
+
+- name: Stop Ambari Agents
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - stopambariagents
+  tags: stopambariagents
+
+- name: Start Ambari Server
+  hosts: ambari-node
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - startambariserver
+  tags: startambariserver
+
+
+- name: Start Ambari Agents
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - startambariagents
+  tags: startambariagents
+
+
+
+###############################################################
+# Upgrade Ambari server/agents and its dependant componennts ##
+###############################################################
+
+- name: Upgrade Ambari Server - PreUpgrade Tasks too
+  hosts: ambari-node
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - upgradeambariprereq
+    - upgradeambariserver
+  tags: upgradeambari
+
+- name: Upgrade Ambari agents - PreUpgrade Tasks too
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - upgradeambariprereq
+    - upgradeambariagents
+  tags: upgradeambari
+
+
+- name: Upgrade Ambari Metrics Monitors
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - upgrademetricsmonitors
+  tags: upgrademetrics
+
+
+- name: Upgrade Ambari Metrics Collector and Graphana Since they are on same node
+  hosts: collector-grapgana
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - upgrademetricscollector
+    - upgradegraphana
+  tags: upgrademetrics
+
+
+- name: Upgrade SmartSense Server, components, and HST agents
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - upgradesmartsense
+  tags: upgradesmartsense
+
+
+###############################################################
+############# Install Ambari Agents on new nodes ##############
+###############################################################
+
+- name: Intall ambari Agents on Newly added nodes
+  hosts: new-nodes
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - installambariagents
+  tags: installambariagents
+
+###############################################################
+############# Install Ambari Server ##############
+###############################################################
+
+- name: Intall ambari Agents on Newly added nodes
+  hosts: ambari-node
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - installambariserver
+  tags: installambariserver
+
+
+###############################################################
+############# Set new node prerequisites   ####################
+###############################################################
+
+- name: Set all the node prerequisites on newly added nodes
+  hosts: new-nodes
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - nodeprereq
+  tags: nodeprereq
+
+###############################################################
+#############          Setup Database     #####################
+###############################################################
+
+- name: Setup {{ database }} role Database node
+  hosts: mariadb-server
+  user: '{{ user }}'
+  any_errors_fatal: true
+  become: yes
+  roles:
+    - role: setup-mariadb
+      when: database != "embedded" and not database_options.external_hostname|default('')

@@ -1,0 +1,21 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug:
+    msg: " {{ ansible_os_family|lower }}       ----   {{ ansible_distribution_major_version }}"
+
+
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+#Include adhoc task yml to be executed
+- name: Add the Adhoc task sub file to be executed here
+  import_tasks: adhoc.yml

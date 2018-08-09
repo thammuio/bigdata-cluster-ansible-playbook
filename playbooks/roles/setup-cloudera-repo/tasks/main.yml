@@ -1,0 +1,81 @@
+---
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_os_family|lower }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+
+- name: Install Apache HTTPD Server
+  yum:
+    name: httpd
+    state: present
+
+- name: Create Local repo Directory
+  file:
+    path: '{{ localrepo_path }}'
+    state: directory
+    mode: 0755
+    owner: '{{localrepo_owner }}'
+    group: '{{ localrepo_group }}'
+
+- name: Download Cloudera Manager Server RPM package
+  get_url:
+    url: '{{ cmserverrpmurl }}'
+    dest: '{{ localrepo_path }}'
+    owner: '{{ localrepo_owner }}'
+    group: '{{ localrepo_group }}'
+    mode: 0440
+
+- name: Download Cloudera Manager Agent RPM package
+  get_url:
+    url: '{{ cmagentrpmurl }}'
+    dest: '{{ localrepopath }}'
+    owner: '{{ localrepoowner }}'
+    group: '{{ localrepogroup }}'
+    mode: 0440
+
+- name: Download Cloudera Manager Dameons RPM package
+  get_url:
+    url: '{{ cmdaemonrpmurl }}'
+    dest: '{{ localrepopath }}'
+    owner: '{{ localrepoowner }}'
+    group: '{{ localrepogroup }}'
+    mode: 0440
+
+- name: Install createrepo package
+  yum:
+    name: createrepo
+    state: present
+
+- name: Create Repo for Previosuly Downlaoded RPMs
+  command: createrepo '{{ localrepo_path }}'
+
+- name: Create Local repo permissions
+  shell: chown -R '{{localrepo_owner }}:{{ localrepo_group }}' '{{ localrepo_path2 }}'
+
+- name: Create Local repo permissions
+  shell: chmod -R 755 '{{ localrepopath2 }}'
+
+- name: Setup HTTP local repository
+  file:
+    src: '{{ localrepopath }}'
+    dest: '{{ localrepodest }}'
+    owner: '{{ httprepouser }}'
+    group: '{{ httprepogroup }}'
+    state: link
+
+- name: Start HTTP service fro Local Repo
+  service:
+    name: httpd
+    state: started
+
+- name: Add Cloudera Manager Local repository - it includes Java also
+  yum_repository:
+    name: cloudera-manager
+    description: '{{ localrepodesc }}'
+    baseurl: '{{ localrepourl }}'
+    gpgcheck: no

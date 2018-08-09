@@ -1,0 +1,22 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+
+- debug: msg='Value is = {{ varcheck }}'
+
+# - name: Yum Clean up and Check for version of Ambari Server/Agent currently Running pre upgrade
+#   shell: yum clean all
+
+- name: Upgrading Ambari Metrics Grafana
+  yum:
+    name: ambari-metrics-grafana
+    state: latest
+
+- name: Getting Installed/Upgraded Ambari Metrics Grafana version
+  shell: yum info ambari-metrics-grafana | grep Version
+  register: yuminforesult
+
+- name: Installed/Upgraded Ambari Metrics Grafana version is
+  debug:
+    var: yuminforesult.stdout_lines

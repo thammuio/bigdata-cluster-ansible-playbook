@@ -1,0 +1,32 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: 
+    msg: 'Value is = {{ varcheck }}'
+
+- file:
+    path: '{{ certs_temp_dest }}'
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: copy the allcerts.tar to other nodes
+  copy:
+    src: 'allcerts.tar'
+    dest: '{{ certs_temp_dest }}/allcerts.tar'
+    owner: root
+    group: root
+    mode: 0755
+
+- name: copy the shell script run-on-other.sh to other nodes
+  copy:
+    src: 'run-on-other.sh'
+    dest: '{{ certs_temp_dest }}/run-on-other.sh'
+    owner: root
+    group: root
+    mode: 0777
+
+- name: Execute the script run-on-other.sh
+  command: sh {{ certs_temp_dest }}/run-on-other.sh

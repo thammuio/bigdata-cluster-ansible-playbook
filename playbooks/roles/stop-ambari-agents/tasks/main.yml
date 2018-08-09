@@ -1,0 +1,13 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+#- name: Stop Ambari Agent
+#  service:
+#    name: ambari-agent
+#    state: stopped
+
+- name: Stop Ambari Agent
+  shell: service ambari-agent stop

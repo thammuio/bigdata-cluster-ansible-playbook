@@ -1,0 +1,25 @@
+---
+packages:
+  # - python-httplib2         # required for calling Ambari API from Ansible
+  # - libselinux-python 
+  - curl                    # curl required by Ambari
+  - unzip                   # unzip required by Ambari
+  - tar                     # tar required by Ambari
+  - wget                    # wget required by Ambari
+  - openssl                 # openssl required by Ambari
+  # - chrony                  # ntp required by Hadoop - we are still using ntp insted of chrony in RHEL7
+  - ntp
+  - krb5-workstation
+  - krb5-libs
+  - krb5-devel
+  - openldap-clients
+  - yum-utils
+  - libselinux-python
+
+# ntp_service_name: chronyd #we are not using chrony, but fro RHEL 7 default is chrony
+
+ntp_service_name: ntpd
+
+firewall_service_name: firewalld
+
+epel_url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"

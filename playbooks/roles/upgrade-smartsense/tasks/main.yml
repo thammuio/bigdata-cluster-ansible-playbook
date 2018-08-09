@@ -1,0 +1,24 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+#- name: Yum Clean up and Check for version of Ambari Server/Agent currently Running pre upgrade
+#  shell: |
+#    yum clean all
+#    yum info smartsense-hst
+
+
+- name: Upgrade SmartSense Server, components, and HST agents
+  yum:
+    name: smartsense-hst
+    state: latest
+
+- name: Getting Installed/Upgraded SmartSense version is
+  shell: yum info smartsense-hst | grep Version
+  register: yuminforesult
+
+- name: Installed/Upgraded SmartSense version is
+  debug:
+    var: yuminforesult.stdout_lines

@@ -1,0 +1,15 @@
+---
+# - include: "set_variables.yml"
+
+###############################################################
+#############     Run Adhoc tasks        ####################
+###############################################################
+
+- name: Running adhoc tasks
+  hosts: new-nodes
+  user: '{{ user }}'
+  #become: yes
+  become_method: sudo
+  roles:
+    - run-adhoc-tasks
+  tags: runadhoctasks

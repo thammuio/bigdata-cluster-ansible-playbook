@@ -1,0 +1,10 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+- name: copyback ambariconf
+  copy:
+    src: '{{ backup_dir }}/ambari.properties'
+    dest: '/etc/ambari-server/conf/ambari.properties'

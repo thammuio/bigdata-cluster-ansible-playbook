@@ -1,0 +1,33 @@
+---
+- name: Create the required Ansible groups
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Add the nodes to bigdata-cluster and role specific groups
+      include: "nodes/add_cluster_nodes.yml"
+      with_items: "{{ nodes|default(omit) }}"
+
+
+- name: Create the required Ansible variables
+  hosts: ambari-server
+  gather_facts: False
+  tasks:
+    - name: Initialize the control variables
+      set_fact:
+        select_stack: True
+        install_hdp: False
+        install_hdf: True
+      no_log: True
+
+    # - block:
+    #   - name: Set the install_hdp variable
+    #     set_fact:
+    #       install_hdp: True
+    #     when: installing_hdp == "True"
+
+    #   - name: Set the install_hdf variable
+    #     set_fact:
+    #       install_hdf: True
+    #     when: installing_hdf == "True"
+    #   when: select_stack == "True"

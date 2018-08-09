@@ -1,0 +1,67 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+# - name: Install the ambari-agent package
+#   package:
+#     name: ambari-agent
+#     update_cache: yes
+#     state: present
+#   notify: Reload systemd
+
+- name: Install Ambari Agent
+  yum:
+    name: ambari-agent
+    state: present
+    disable_gpg_check: true
+  notify: Reload systemd
+
+# - name: Update /etc/python/cert-verification.cfg for Cert Validation of Ambari Agent if Needed
+#   lineinfile:
+#     dest: /etc/python/cert-verification.cfg
+#     regexp: "^verify=platform_default"
+#     line: 'verify=disable'
+#     state: present
+
+- name: Set the Ambari Server in the agent configuration
+  lineinfile:
+    dest: /etc/ambari-agent/conf/ambari-agent.ini
+    regexp: "^hostname="
+    # line: "hostname={{ hostvars[groups['ambari-server']|sort|list|first]['ansible_fqdn'] }}"
+    line: 'hostname={{ ambari_server }}'
+    state: present
+  notify: Restart ambari-agent
+
+
+- name: Validate Installed Ambari Agent Version
+  shell: rpm -qa | grep ambari
+  register: rpmqa
+
+- debug: var=rpmqa.stdout_lines
+
+### The following is done on newer OS-es to prevent issues with the latest Python libraries rejecting lower TLS protocols
+# - name: Configure the Ambari agent to use TLS 1.2
+#   ini_file:
+#     path: /etc/ambari-agent/conf/ambari-agent.ini
+#     create: no
+#     section: "security"
+#     option: "force_https_protocol"
+#     value: "PROTOCOL_TLSv1_2"
+#     state: present
+#   notify: Restart ambari-agent
+#   when: (ansible_os_family|lower == "redhat" and ansible_distribution_major_version|int >= 7) or (ansible_os_family|lower == "debian" and ansible_distribution_major_version|int >= 16) or (ansible_os_family|lower == "suse" and ansible_distribution_major_version|int >= 12)
+
+- meta: flush_handlers
+
+- name: Make sure the ambari-agent service is started
+  service:
+    name: ambari-agent
+    state: started
+
+- name: Make sure the ambari-agent service is enabled
+  service:
+    name: ambari-agent
+    enabled: yes
+  ignore_errors: true

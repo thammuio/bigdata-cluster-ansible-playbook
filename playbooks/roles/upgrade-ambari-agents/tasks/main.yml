@@ -1,0 +1,33 @@
+---
+- name: Include Variable file
+  include_vars: ../../../group_vars/all.yml
+
+- debug: msg='Value is = {{ varcheck }}'
+
+# - name: Yum Clean up and Check for version of Ambari Server/Agent currently Running pre upgrade
+#   shell: |
+#     yum clean all
+#     yum info ambari-agent
+
+# - name: Stop Ambari Agent
+#   service:
+#     name: ambari-agent
+#     state: stopped
+
+- name: Stop Ambari Agent
+  shell: service ambari-agent stop
+
+- name: Upgrading Ambari-Agent
+  yum:
+    name: ambari-agent
+    state: latest
+  notify:
+    - start ambari-agent
+
+- name: Getting Installed/Upgraded Ambari-Agent version
+  shell: yum info ambari-agent | grep Version
+  register: yuminforesult
+
+- name: Installed/Upgraded Ambari-Agent version is
+  debug:
+    var: yuminforesult.stdout_lines

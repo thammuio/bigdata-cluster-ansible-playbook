@@ -1,0 +1,121 @@
+
+---
+# - include: "set_variables.yml"
+
+###############################################################
+#############     Prepare the Nodes        ####################
+###############################################################
+
+- name: Prepare Nodes
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  roles:
+    - prepare-cluster-nodes
+  tags: prepareclusternodes
+
+
+###############################################################
+#############          Setup Database     #####################
+###############################################################
+
+- name: Setup {{ database }} role Database node
+  hosts: ambari-server
+  user: '{{ user }}'
+  any_errors_fatal: true
+  become: yes
+  roles:
+    - role: setup-cluster-database
+      when: database != "embedded" or database != "oracle" and not database_options.external_hostname|default('')
+  tags: setupdatabase
+
+
+###############################################################
+############# Install Ambari Server ##############
+###############################################################
+
+- name: Intall Ambari Server
+  hosts: ambari-server
+  user: '{{ user }}'
+  any_errors_fatal: true
+  #become: yes
+  #become_method: sudo
+  roles:
+    - install-ambari-server
+  tags: installambariserver
+
+
+###############################################################
+############# Configure Ambari Server ###########################
+###############################################################
+
+- name: Configure Ambari Server
+  hosts: ambari-server
+  user: '{{ user }}'
+  any_errors_fatal: true
+  #become: yes
+  #become_method: sudo
+  roles:
+    - configure-ambari-server
+  tags: configureambariserver
+  
+###############################################################
+############# Install Ambari Agents on the nodes ##############
+###############################################################
+
+- name: Intall ambari Agents on the nodes
+  hosts: all
+  user: '{{ user }}'
+  any_errors_fatal: true
+  #become: yes
+  #become_method: sudo
+  roles:
+    - install-ambari-agents
+  tags: installambariagents
+
+
+####################################################
+#### Start or Stop Ambari server or agents##########
+####################################################
+
+- name: Stop Ambari Server
+  hosts: ambari-server
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - stop-ambari-server
+  tags: stopambariserver
+
+- name: Stop Ambari Agents
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - stop-ambari-agents
+  tags: stopambariagents
+
+- name: Start Ambari Server
+  hosts: ambari-server
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - start-ambari-server
+  tags: startambariserver
+
+
+- name: Start Ambari Agents
+  hosts: all
+  user: '{{ user }}'
+  #become: yes
+  #become_method: sudo
+  gather_facts: no
+  roles:
+    - start-ambari-agents
+  tags: startambariagents
