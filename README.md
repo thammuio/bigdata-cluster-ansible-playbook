@@ -1,4 +1,4 @@
-IT Big Data
+Ansible Playbooks
 -----------
 
 These Ansible playbooks will help in Building Hortonworks clusters (either Hortonworks Data Platform or Hortonworks DataFlow), Cloudera CDH, KAFKA, Cassandra, HBase clusters, Upgrading - Ambari, HDP and HDF, and Adding New Nodes to the Clusters.
