@@ -29,7 +29,7 @@
 - debug: var=rhn_register.stdout_lines
 
 - name: Check for list of SUDO Permissions
-  shell: sudo -l | grep "("
+  shell: dzdo -l | grep "("
   register: sudo_l
 
 - debug: var=sudo_l.stdout_lines
@@ -73,7 +73,7 @@
 - debug: var=centrifydc.stdout_lines
 
 - name: Validate Centrify adquery
-  shell: adquery user user; adquery user '{{ ssh_user }}'
+  shell: adquery user p2709241; adquery user '{{ ssh_user }}'
   register: adquery
 
 - debug: var=adquery.stdout_lines
